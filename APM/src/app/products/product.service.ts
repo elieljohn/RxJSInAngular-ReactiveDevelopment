@@ -11,7 +11,7 @@ import { Product } from './product';
 export class ProductService {
   private productsUrl = 'api/products';
   private suppliersUrl = 'api/suppliers';
-  
+
   constructor(private http: HttpClient) { }
 
   getProducts(): Observable<Product[]> {

@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { EMPTY, Observable, catchError } from 'rxjs';
 
 import { ProductCategory } from '../product-categories/product-category';
-
 import { Product } from './product';
 import { ProductService } from './product.service';
-import { Observable } from 'rxjs';
 
 @Component({
   templateUrl: './product-list.component.html',
@@ -21,7 +20,14 @@ export class ProductListComponent implements OnInit {
 
   ngOnInit(): void {
     // Assign the observable returned by getProducts to 'products$'
-    this.products$ = this.productService.getProducts();
+    this.products$ = this.productService.getProducts()
+      .pipe(
+        // Error handling
+        catchError(err => {
+          this.errorMessage = err;
+          return EMPTY;
+        })
+      );
   }
 
   onAdd(): void {
