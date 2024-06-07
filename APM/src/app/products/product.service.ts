@@ -19,7 +19,7 @@ export class ProductService {
     // Map products array to a new array of Product objects with a new price property
     map(products =>
       products.map(product => ({
-        ...product,
+        ...product, // Spread operator to copy the properties of each object
         price: product.price ? product.price * 1.5 : 0,
         searchKey: [product.productName]
       } as Product))),
