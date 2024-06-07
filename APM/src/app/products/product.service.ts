@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import { catchError, map, Observable, tap, throwError } from 'rxjs';
+import { catchError, combineLatest, map, Observable, tap, throwError } from 'rxjs';
 
 import { Product } from './product';
+import { ProductCategoryService } from '../product-categories/product-category.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,22 +16,31 @@ export class ProductService {
   // Make an HTTP GET request to this.productsUrl which should return an array of Product objects
   // Assign to products$
   products$ = this.http.get<Product[]>(this.productsUrl)
-  .pipe(
-    // Map products array to a new array of Product objects with a new price property
-    map(products =>
+    .pipe(
+      tap(data => console.log('Products: ', JSON.stringify(data))),
+      catchError(this.handleError)
+    );
+
+  // Combine this.products$ and this.ProductCategoryService.productCategories$
+  productsWithCategory$ = combineLatest([
+    this.products$,
+    this.ProductCategoryService.productCategories$
+  ]).pipe(
+    // Map the combined observables into a new array of Product objects
+    map(([products, categories]) =>
       products.map(product => ({
-        ...product, // Spread operator to copy the properties of each object
+        ...product,
         price: product.price ? product.price * 1.5 : 0,
+        // Find the ProductCategory object that matches the product.categoryId
+        // and assign the name of that category to the product.category property
+        category: categories.find(c => product.categoryId === c.id)?.name,
         searchKey: [product.productName]
-      } as Product))),
-
-    // Log the products array to the console
-    tap(data => console.log('Products: ', JSON.stringify(data))),
-
-    catchError(this.handleError)
+      } as Product))
+    )
   );
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient,
+              private ProductCategoryService: ProductCategoryService) { }
 
   private fakeProduct(): Product {
     return {

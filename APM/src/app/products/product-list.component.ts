@@ -17,7 +17,7 @@ export class ProductListComponent {
 
   // Declarative approach
   // Subscribe to 'products$' observable from ProductService
-  products$ = this.productService.products$
+  products$ = this.productService.productsWithCategory$
     .pipe(
       // Error handling
       catchError(err => {
