@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import { catchError, Observable, tap, throwError } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 
 import { Product } from './product';
 
@@ -16,7 +16,17 @@ export class ProductService {
   // Assign to products$
   products$ = this.http.get<Product[]>(this.productsUrl)
   .pipe(
-    tap(data => console.log('Products: ', JSON.stringify(data))), // Log for debugging
+    // Map products array to a new array of Product objects with a new price property
+    map(products =>
+      products.map(product => ({
+        ...product,
+        price: product.price ? product.price * 1.5 : 0,
+        searchKey: [product.productName]
+      } as Product))),
+
+    // Log the products array to the console
+    tap(data => console.log('Products: ', JSON.stringify(data))),
+
     catchError(this.handleError)
   );
 
