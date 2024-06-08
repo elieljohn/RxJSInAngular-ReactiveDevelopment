@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import { catchError, combineLatest, map, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, map, Observable, tap, throwError } from 'rxjs';
 
 import { Product } from './product';
 import { ProductCategoryService } from '../product-categories/product-category.service';
@@ -39,18 +39,30 @@ export class ProductService {
     )
   );
 
-  // Find 'Product' object with a specific id from 'this.productWithCategory$' and assign to 'selectedProduct$'
-  selectedProduct$ = this.productsWithCategory$
-    .pipe(
-      map(products =>
-        // Find the Product object with a specific id
-        products.find(product => product.id === 5)  // Temporarily hard coded value
-      ),
-      tap(product => console.log('Selected Product', product))
-    );
+  // Selected product action stream
+  private productSelectedSubject = new BehaviorSubject<number>(0);
+  productSelectedAction$ = this.productSelectedSubject.asObservable();
+
+  // Find 'Product' object that corresponds to the 'selectedProductId' and assign to 'selectedProduct$'
+  selectedProduct$ = combineLatest([
+    this.productsWithCategory$,
+    this.productSelectedAction$
+  ]).pipe(
+    map(([products, selectedProductId]) =>
+      // Find the product with an id that matches the selectedProductId
+      // Selects the product with the ID emitted by this.productSelectedAction$
+      products.find(product => product.id === selectedProductId)
+    ),
+    tap(product => console.log('selectedProduct', product))
+  );
 
   constructor(private http: HttpClient,
               private ProductCategoryService: ProductCategoryService) { }
+
+  // Emits the value of the 'selectedProductId' to the 'productSelectedSubject' when called
+  selectedProductChanged(selectedProductId: number): void {
+    this.productSelectedSubject.next(selectedProductId);
+  }
 
   private fakeProduct(): Product {
     return {
