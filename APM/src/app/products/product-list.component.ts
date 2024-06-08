@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { EMPTY, Subject, catchError, combineLatest, map } from 'rxjs';
+import { EMPTY, Subject, catchError, combineLatest, map, startWith } from 'rxjs';
 
 import { ProductService } from './product.service';
 import { ProductCategoryService } from '../product-categories/product-category.service';
@@ -24,6 +24,9 @@ export class ProductListComponent {
   products$ = combineLatest([
     this.productService.productsWithCategory$,
     this.categorySelectedAction$
+    .pipe(
+      startWith(0)  // Provide an initial value to initialize UI components
+    )
   ]).pipe(
       map(([products, selectedCategoryId]) =>
         // If selectedCategoryId is true (selected), check if product.categoryId matches selectedCategoryId
