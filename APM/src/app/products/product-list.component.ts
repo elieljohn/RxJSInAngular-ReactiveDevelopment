@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { EMPTY, catchError, map } from 'rxjs';
+import { EMPTY, Subject, catchError, combineLatest, map } from 'rxjs';
 
-import { ProductCategory } from '../product-categories/product-category';
 import { ProductService } from './product.service';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 
@@ -13,18 +12,30 @@ import { ProductCategoryService } from '../product-categories/product-category.s
 export class ProductListComponent {
   pageTitle = 'Product List';
   errorMessage = '';
-  selectedCategoryId = 1;
 
-  // Declarative approach
-  // Subscribe to 'products$' observable from ProductService
-  products$ = this.productService.productsWithCategory$
-    .pipe(
-      // Error handling
-      catchError(err => {
-        this.errorMessage = err;
-        return EMPTY;
-      })
-    );
+  // Action Stream
+  // Private Subject instance which emits a <number>
+  private categorySelectedSubject = new Subject<number>();
+  // Public Observable instance which can be subscribed to
+  categorySelectedAction$ = this.categorySelectedSubject.asObservable();
+
+  // Observable that emits an array of Product objects, filtered based on the selected category
+  // Combine productsWithCategory$ from ProductService with categorySelectedAction$
+  products$ = combineLatest([
+    this.productService.productsWithCategory$,
+    this.categorySelectedAction$
+  ]).pipe(
+      map(([products, selectedCategoryId]) =>
+        // If selectedCategoryId is true (selected), check if product.categoryId matches selectedCategoryId
+        // If no category is selected, set return to matching condition to 'true', returning all products
+        products.filter(product =>
+          selectedCategoryId ? product.categoryId === selectedCategoryId : true
+        )),
+        catchError(err => {
+          this.errorMessage = err;
+          return EMPTY;
+        })
+      );
 
   // Subscribe to 'categories$' observable from ProductCategoryService
   categories$ = this.productCategoryService.productCategories$
@@ -35,19 +46,6 @@ export class ProductListComponent {
       })
     );
 
-  // Filter Product objects based on the selected category
-  // If no category is selected, the observable emits the full list
-  productsSimpleFilter$ = this.productService.productsWithCategory$
-    .pipe(
-      map(products =>
-        products.filter(product =>
-          // If this.selectedCategoryId is true, check if product.categoryId matches with this.selectedCategoryId
-          // If false (this.selectedCategoryId is not selected), the condition is set to always true, returning all products
-          this.selectedCategoryId ? product.categoryId === this.selectedCategoryId : true
-        )
-      )
-    )
-
   constructor(private productService: ProductService,
               private productCategoryService: ProductCategoryService ) { }
 
@@ -55,7 +53,8 @@ export class ProductListComponent {
     console.log('Not yet implemented');
   }
 
+  // Emits the 'categoryId' numeric value to 'CategorySelectedSubject' when a category is selected on the UI
   onSelected(categoryId: string): void {
-    this.selectedCategoryId = +categoryId;
+    this.categorySelectedSubject.next(+categoryId);
   }
 }
