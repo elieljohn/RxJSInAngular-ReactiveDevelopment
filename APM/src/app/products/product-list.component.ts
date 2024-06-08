@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { EMPTY, Observable, catchError } from 'rxjs';
+import { EMPTY, Observable, catchError, map } from 'rxjs';
 
 import { ProductCategory } from '../product-categories/product-category';
 import { Product } from './product';
@@ -14,6 +14,7 @@ export class ProductListComponent {
   pageTitle = 'Product List';
   errorMessage = '';
   categories: ProductCategory[] = [];
+  selectedCategoryId = 1;
 
   // Declarative approach
   // Subscribe to 'products$' observable from ProductService
@@ -25,6 +26,19 @@ export class ProductListComponent {
         return EMPTY;
       })
     );
+
+  // Filter Product objects based on the selected category
+  // If no category is selected, the observable emits the full list
+  productsSimpleFilter$ = this.productService.productsWithCategory$
+    .pipe(
+      map(products =>
+        products.filter(product =>
+          // If this.selectedCategoryId is true, check if product.categoryId matches with this.selectedCategoryId
+          // If false (this.selectedCategoryId is not selected), the condition is set to always true, returning all products
+          this.selectedCategoryId ? product.categoryId === this.selectedCategoryId : true
+        )
+      )
+    )
 
   constructor(private productService: ProductService) { }
 
