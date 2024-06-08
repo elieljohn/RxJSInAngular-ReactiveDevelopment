@@ -39,6 +39,16 @@ export class ProductService {
     )
   );
 
+  // Find 'Product' object with a specific id from 'this.productWithCategory$' and assign to 'selectedProduct$'
+  selectedProduct$ = this.productsWithCategory$
+    .pipe(
+      map(products =>
+        // Find the Product object with a specific id
+        products.find(product => product.id === 5)  // Temporarily hard coded value
+      ),
+      tap(product => console.log('Selected Product', product))
+    );
+
   constructor(private http: HttpClient,
               private ProductCategoryService: ProductCategoryService) { }
 

@@ -15,8 +15,8 @@ export class ProductListAltComponent {
   selectedProductId = 0;
 
   // Declarative approach
-  // Subscribe to 'products$' observable from ProductService
-  products$ = this.productService.products$
+  // Subscribe to 'productsWithCategory$' observable from ProductService
+  products$ = this.productService.productsWithCategory$
     .pipe(
       catchError(err => {
         this.errorMessage = err;
