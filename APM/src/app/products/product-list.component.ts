@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { EMPTY, Subject, catchError, combineLatest, map, startWith } from 'rxjs';
+import { BehaviorSubject, EMPTY, Subject, catchError, combineLatest, map, startWith } from 'rxjs';
 
 import { ProductService } from './product.service';
 import { ProductCategoryService } from '../product-categories/product-category.service';
@@ -15,7 +15,7 @@ export class ProductListComponent {
 
   // Action Stream
   // Private Subject instance which emits a <number>
-  private categorySelectedSubject = new Subject<number>();
+  private categorySelectedSubject = new BehaviorSubject<number>(0); // Requires an initial value and emits its current value when subscribe to
   // Public Observable instance which can be subscribed to
   categorySelectedAction$ = this.categorySelectedSubject.asObservable();
 
@@ -24,9 +24,6 @@ export class ProductListComponent {
   products$ = combineLatest([
     this.productService.productsWithCategory$,
     this.categorySelectedAction$
-    .pipe(
-      startWith(0)  // Provide an initial value to initialize UI components
-    )
   ]).pipe(
       map(([products, selectedCategoryId]) =>
         // If selectedCategoryId is true (selected), check if product.categoryId matches selectedCategoryId
