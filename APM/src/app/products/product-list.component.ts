@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { BehaviorSubject, EMPTY, Subject, catchError, combineLatest, map, startWith } from 'rxjs';
-
+import { BehaviorSubject, EMPTY, Subject, catchError, combineLatest, map } from 'rxjs';
 import { ProductService } from './product.service';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 

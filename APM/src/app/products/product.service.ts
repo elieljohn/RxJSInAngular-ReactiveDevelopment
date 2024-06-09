@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-
 import { BehaviorSubject, catchError, combineLatest, map, Observable, tap, throwError } from 'rxjs';
-
 import { Product } from './product';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 

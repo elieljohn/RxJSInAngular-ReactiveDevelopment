@@ -1,8 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-
-import { EMPTY, Subject, Subscription, catchError } from 'rxjs';
-
-import { Product } from '../product';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { EMPTY, Subject, catchError } from 'rxjs';
 import { ProductService } from '../product.service';
 
 @Component({
