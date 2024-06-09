@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, combineLatest, map, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, map, merge, Observable, scan, Subject, tap, throwError } from 'rxjs';
 import { Product } from './product';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 
@@ -54,8 +54,32 @@ export class ProductService {
     tap(product => console.log('selectedProduct', product))
   );
 
+  // productInsertedAction$ action stream
+  private productInsertedSubject = new Subject<Product>();
+  productInsertedAction$ = this.productInsertedSubject.asObservable();
+
+  // Combine productInsertedAction$ action stream to data stream
+  productsWithAdd$ = merge(
+    this.productsWithCategory$,
+    this.productInsertedAction$
+  ).pipe(
+    scan((acc, value) =>
+      // If value is an array, make a copy of that array
+      // If not, make a copy of the accumulator array and add the value to it
+      // Add an empty array of products to the accumulator to type it correctly
+      (value instanceof Array) ? [...value] : [...acc, value], [] as Product[])
+  )
+
   constructor(private http: HttpClient,
               private ProductCategoryService: ProductCategoryService) { }
+
+  // Emits 'newProduct' to 'productInsertedSubject' when called
+  addProduct(newProduct?: Product) {
+    // If 'newProduct' is 'true', then assign it to 'newProduct'
+    // Else, assign 'this.fakeProduct' to 'newProduct'
+    newProduct = newProduct || this.fakeProduct();
+    this.productInsertedSubject.next(newProduct);
+  }
 
   // Emits the value of the 'selectedProductId' to the 'productSelectedSubject' when called
   selectedProductChanged(selectedProductId: number): void {
@@ -70,7 +94,7 @@ export class ProductService {
       description: 'Our new product',
       price: 8.9,
       categoryId: 3,
-      // category: 'Toolbox',
+      category: 'Toolbox',
       quantityInStock: 30
     };
   }

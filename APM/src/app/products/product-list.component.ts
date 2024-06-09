@@ -24,7 +24,7 @@ export class ProductListComponent {
   // Observable that emits an array of Product objects, filtered based on the selected category
   // Combine productsWithCategory$ from ProductService with categorySelectedAction$
   products$ = combineLatest([
-    this.productService.productsWithCategory$,
+    this.productService.productsWithAdd$,
     this.categorySelectedAction$
   ]).pipe(
       map(([products, selectedCategoryId]) =>
@@ -51,8 +51,9 @@ export class ProductListComponent {
   constructor(private productService: ProductService,
               private productCategoryService: ProductCategoryService ) { }
 
+  // Call 'addProduct' to emit 'newProduct'
   onAdd(): void {
-    console.log('Not yet implemented');
+    this.productService.addProduct();
   }
 
   // Emits the 'categoryId' numeric value to 'CategorySelectedSubject' when a category is selected on the UI
