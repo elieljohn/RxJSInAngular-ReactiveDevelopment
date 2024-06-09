@@ -11,7 +11,10 @@ import { ProductCategoryService } from '../product-categories/product-category.s
 })
 export class ProductListComponent {
   pageTitle = 'Product List';
-  errorMessage = '';
+
+  // errorMessage$ action stream
+  private errorMessageSubject = new Subject<string>();
+  errorMessage$ = this.errorMessageSubject.asObservable();
 
   // Action Stream
   // Private Subject instance which emits a <number>
@@ -32,7 +35,7 @@ export class ProductListComponent {
           selectedCategoryId ? product.categoryId === selectedCategoryId : true
         )),
         catchError(err => {
-          this.errorMessage = err;
+          this.errorMessageSubject.next(err); // Emit error to 'errorMessageSubject'
           return EMPTY;
         })
       );
@@ -41,7 +44,7 @@ export class ProductListComponent {
   categories$ = this.productCategoryService.productCategories$
     .pipe(
       catchError(err => {
-        this.errorMessage = err;
+        this.errorMessageSubject.next(err); // Emit error to 'errorMessageSubject'
         return EMPTY;
       })
     );
