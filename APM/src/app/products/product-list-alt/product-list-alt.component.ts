@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 
-import { EMPTY, Subscription, catchError } from 'rxjs';
+import { EMPTY, Subject, Subscription, catchError } from 'rxjs';
 
 import { Product } from '../product';
 import { ProductService } from '../product.service';
@@ -12,14 +12,18 @@ import { ProductService } from '../product.service';
 })
 export class ProductListAltComponent {
   pageTitle = 'Products';
-  errorMessage = '';
+
+  // errorMessage$ action stream
+  private errorMessageSubject = new Subject<string>();
+  errorMessage$ = this.errorMessageSubject.asObservable();
 
   // Declarative approach
   // Subscribe to 'productsWithCategory$' observable from ProductService
   products$ = this.productService.productsWithCategory$
     .pipe(
       catchError(err => {
-        this.errorMessage = err;
+        // Emit error message to 'errorMessage$' action stream
+        this.errorMessageSubject.next(err);
         return EMPTY;
       })
     );
