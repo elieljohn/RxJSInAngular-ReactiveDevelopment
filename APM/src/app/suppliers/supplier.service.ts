@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { throwError, Observable, of, map } from 'rxjs';
+import { throwError, Observable, of, map, tap, concatMap } from 'rxjs';
 import { Supplier } from './supplier';
 
 @Injectable({
@@ -15,13 +15,27 @@ export class SupplierService {
       map(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
     );
 
+  // Emits an observable for each ID that was passed
+  // Each emitted observable will be the result of 'this.http.get<Supplier>()'
+  suppliersWithConcatMap$ = of(1, 5, 8)
+    .pipe(
+      tap(id => console.log('concatMap source Observable', id)),
+      // concatMap: HTTP requests are made in a sequential manner
+      concatMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
+    );
+
   constructor(private http: HttpClient) {
-    // eslint-disable-next-line rxjs/no-nested-subscribe
-    this.suppliersWithMap$.subscribe(o => o.subscribe(
-      // Inner subscribe to subscribe to each observable returned by 'this.suppliersWithMap$'
-      // It then logs the 'item' value to the console
-      item => console.log('map result', item)
-    ));
+    // Subscribe to 'this.suppliersWithMap$' to log the 'item' value to the console
+    this.suppliersWithConcatMap$.subscribe(
+      item => console.log('concatMap result', item)
+    );
+
+    // // eslint-disable-next-line rxjs/no-nested-subscribe
+    // this.suppliersWithMap$.subscribe(o => o.subscribe(
+    //   // Inner subscribe to subscribe to each observable returned by 'this.suppliersWithMap$'
+    //   // It then logs the 'item' value to the console
+    //   item => console.log('map result', item)
+    // ));
   }
 
   private handleError(err: HttpErrorResponse): Observable<never> {
