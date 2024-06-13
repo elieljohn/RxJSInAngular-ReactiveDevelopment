@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { throwError, Observable, of, map, tap, concatMap, mergeMap } from 'rxjs';
+import { throwError, Observable, of, map, tap, concatMap, mergeMap, switchMap } from 'rxjs';
 import { Supplier } from './supplier';
 
 @Injectable({
@@ -35,11 +35,19 @@ export class SupplierService {
       mergeMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
     );
 
+  // Emits an observable for each ID that was passed
+  // 'switchMap' cancels any previous inner observables when a new one is emitted from the source observable
+  suppliersWithSwitchMap$ = of(1, 5, 8)
+    .pipe(
+      tap(id => console.log('switchMap source Observable', id)),
+      switchMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
+    );
+
   constructor(private http: HttpClient) {
-    // Subscribe to 'this.suppliersWithConcatMap$' to log the 'item' value to the console
+    // Subscribe to log the 'item' value to the console
     this.suppliersWithConcatMap$.subscribe(item => console.log('concatMap result', item));
-    // Subscribe to 'this.suppliersWithMergeMap$' to log the 'item' value to the console
     this.suppliersWithMergeMap$.subscribe(item => console.log('mergeMap result', item));
+    this.suppliersWithSwitchMap$.subscribe(item => console.log('switchMap result', item));
 
     // // eslint-disable-next-line rxjs/no-nested-subscribe
     // this.suppliersWithMap$.subscribe(o => o.subscribe(
