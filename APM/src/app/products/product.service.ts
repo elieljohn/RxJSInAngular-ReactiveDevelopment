@@ -16,10 +16,10 @@ export class ProductService {
   // Assign to products$
   products$ = this.http.get<Product[]>(this.productsUrl)
     .pipe(
-      // tap(data => console.log('Products: ', JSON.stringify(data))),
+      tap(data => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
-  
+
   // Combine this.products$ and this.ProductCategoryService.productCategories$
   productsWithCategory$ = combineLatest([
     this.products$,
