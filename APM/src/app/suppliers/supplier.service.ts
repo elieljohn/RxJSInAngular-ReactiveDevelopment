@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { throwError, Observable, of, map, tap, concatMap } from 'rxjs';
+import { throwError, Observable, of, map, tap, concatMap, mergeMap } from 'rxjs';
 import { Supplier } from './supplier';
 
 @Injectable({
@@ -24,11 +24,22 @@ export class SupplierService {
       concatMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
     );
 
-  constructor(private http: HttpClient) {
-    // Subscribe to 'this.suppliersWithMap$' to log the 'item' value to the console
-    this.suppliersWithConcatMap$.subscribe(
-      item => console.log('concatMap result', item)
+  // Emits an observable for each ID that was passed
+  // Each emitted observable will be the result of 'this.http.get<Supplier>()'
+  suppliersWithMergeMap$ = of(1, 5, 8)
+    .pipe(
+      tap(id => console.log('mergeMap source Observable', id)),
+      // mergeMap: HTTP requests are made in parallel
+      // Results are emitted as they become available (sequence is unpredictable)
+      // Can improve performance
+      mergeMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
     );
+
+  constructor(private http: HttpClient) {
+    // Subscribe to 'this.suppliersWithConcatMap$' to log the 'item' value to the console
+    this.suppliersWithConcatMap$.subscribe(item => console.log('concatMap result', item));
+    // Subscribe to 'this.suppliersWithMergeMap$' to log the 'item' value to the console
+    this.suppliersWithMergeMap$.subscribe(item => console.log('mergeMap result', item));
 
     // // eslint-disable-next-line rxjs/no-nested-subscribe
     // this.suppliersWithMap$.subscribe(o => o.subscribe(
