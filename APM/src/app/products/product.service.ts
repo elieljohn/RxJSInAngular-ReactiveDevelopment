@@ -57,6 +57,17 @@ export class ProductService {
     shareReplay(1)  // Cache the last emitted value so that it can be reused by a new subscriber
   );
 
+  // Emits an array of suppliers that are associated with the currently selected product
+  selectedProductSuppliers$ = combineLatest([
+    this.selectedProduct$,
+    this.supplerService.suppliers$
+  ]).pipe(
+    map(([selectedProduct, suppliers]) =>
+      // Filters the suppliers array to only include suppliers whose id is present in the selectedProduct.supplierIds array
+      suppliers.filter(supplier => selectedProduct?.supplierIds?.includes(supplier.id))
+    )
+  );
+
   // productInsertedAction$ action stream
   private productInsertedSubject = new Subject<Product>();
   productInsertedAction$ = this.productInsertedSubject.asObservable();
