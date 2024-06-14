@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, catchError, combineLatest, map, merge, Observable, scan, share, shareReplay, Subject, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, filter, forkJoin, map, merge, Observable, of, scan, shareReplay, Subject, switchMap, tap, throwError } from 'rxjs';
 import { Product } from './product';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 import { SupplierService } from '../suppliers/supplier.service';
+import { Supplier } from '../suppliers/supplier';
 
 @Injectable({
   providedIn: 'root'
@@ -57,16 +58,36 @@ export class ProductService {
     shareReplay(1)  // Cache the last emitted value so that it can be reused by a new subscriber
   );
 
-  // Emits an array of suppliers that are associated with the currently selected product
-  selectedProductSuppliers$ = combineLatest([
-    this.selectedProduct$,
-    this.supplerService.suppliers$
-  ]).pipe(
-    map(([selectedProduct, suppliers]) =>
-      // Filters the suppliers array to only include suppliers whose id is present in the selectedProduct.supplierIds array
-      suppliers.filter(supplier => selectedProduct?.supplierIds?.includes(supplier.id))
-    )
-  );
+  // // Emits an array of suppliers that are associated with the currently selected product
+  // selectedProductSuppliers$ = combineLatest([
+  //   this.selectedProduct$,
+  //   this.supplerService.suppliers$
+  // ]).pipe(
+  //   map(([selectedProduct, suppliers]) =>
+  //     // Filters the suppliers array to only include suppliers whose id is present in the selectedProduct.supplierIds array
+  //     suppliers.filter(supplier => selectedProduct?.supplierIds?.includes(supplier.id))
+  //   )
+  // );
+
+  // Emits an array of Supplier objects that are associated with the currently selected product
+  selectedProductSuppliers$ = this.selectedProduct$
+    .pipe(
+      filter(product => Boolean(product)),  // Ensures that 'selectedProduct$' only emits products that are truthy
+      // Transforms the filtered selectedProduct values into a new observable
+      switchMap(selectedProduct => {
+        // If selectedProduct?.supplierIds is truthy, use forkJoin to make HTTP requests for each supplier ID and return an observable that emits an array of Supplier object
+        // forkJoin: Combines multiple observables and waits for all to complete before emitting the last emitted values from each observable as an array
+        // Else, emit an empty array
+        if (selectedProduct?.supplierIds) {
+          return forkJoin(selectedProduct?.supplierIds?.map(supplierId =>
+            this.http.get<Supplier>(`${this.suppliersUrl}/${supplierId}`)
+          ))
+        } else {
+          return of([]);
+        }
+      }),
+      tap(suppliers => console.log('product suppliers', JSON.stringify(suppliers)))
+    );
 
   // productInsertedAction$ action stream
   private productInsertedSubject = new Subject<Product>();
