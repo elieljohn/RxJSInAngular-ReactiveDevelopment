@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Supplier } from '../../suppliers/supplier';
 import { ProductService } from '../product.service';
-import { EMPTY, Subject, catchError } from 'rxjs';
+import { EMPTY, Subject, catchError, map } from 'rxjs';
 
 @Component({
   selector: 'pm-product-detail',
@@ -9,8 +8,6 @@ import { EMPTY, Subject, catchError } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductDetailComponent {
-  pageTitle = 'Product Detail';
-
   // Error message action stream
   private errorMessageSubject = new Subject<string>();
   errorMessage$ = this.errorMessageSubject.asObservable();
@@ -22,6 +19,15 @@ export class ProductDetailComponent {
         return EMPTY;
       })
     );
+
+  // Emits a string in the given format for each product emitted by product$
+  pageTitle$ = this.product$
+    .pipe(
+      // Transforms the values emitted by 'product$'
+      // If 'p' is truthy, it returns a string with the specified format
+      // Else, it returns null
+      map(p => p ? `Product Detail for: ${p.productName}` : null)
+    )
 
   productSuppliers$ = this.productService.selectedProductSuppliers$
     .pipe(
