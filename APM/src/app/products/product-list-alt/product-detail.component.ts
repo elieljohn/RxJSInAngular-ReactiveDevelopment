@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ProductService } from '../product.service';
-import { EMPTY, Subject, catchError, map } from 'rxjs';
+import { EMPTY, Subject, catchError, combineLatest, filter, map } from 'rxjs';
 
 @Component({
   selector: 'pm-product-detail',
@@ -35,6 +35,20 @@ export class ProductDetailComponent {
         this.errorMessageSubject.next(err);
         return EMPTY;
       })
+    );
+
+  // Combines multiple observables
+  // View model for the product detail page
+  vm$ = combineLatest([ // 'combineLatest' ensures that vm$ emits only when all the necessary data is available
+    this.product$,
+    this.productSuppliers$,
+    this.pageTitle$
+  ])
+    .pipe(
+      // 'filter' ensures that vm$ only emits a valid view model
+      filter(([product]) => Boolean(product)),
+      map(([product, productSuppliers, pageTitle]) =>
+        ({product, productSuppliers, pageTitle}))
     );
 
   constructor(private productService: ProductService) { }
